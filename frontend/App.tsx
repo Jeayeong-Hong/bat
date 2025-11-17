@@ -13,6 +13,9 @@ export default function App() {
   const [step, setStep] = useState<Step>('splash');
   const [nickname, setNickname] = useState('');
   const [typeLabel, setTypeLabel] = useState('');
+  const [level, setLevel] = useState(1);     // 초기 레벨 1
+  const [exp, setExp] = useState(0);         // 초기 경험치 0
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -58,6 +61,8 @@ export default function App() {
         <HomeScreen
           nickname={nickname}
           typeLabel={typeLabel}
+          level={level}
+          exp={exp}
         />
       )}
 

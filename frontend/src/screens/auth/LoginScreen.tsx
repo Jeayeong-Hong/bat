@@ -14,10 +14,13 @@ export default function LoginScreen({ onSocialLogin }: Props) {
         resizeMode="contain"
       />
 
-
       <View style={styles.buttonGroup}>
         <Pressable style={[styles.button, styles.kakao]} onPress={onSocialLogin}>
-          <Text style={styles.kakaoIcon}>💬</Text>
+          <Image
+            source={require('../../../assets/kakao.png')}
+            style={styles.kakaoIcon}
+            resizeMode="contain"
+          />
           <Text style={styles.buttonText}>카카오로 간편 로그인</Text>
         </Pressable>
 
@@ -28,6 +31,7 @@ export default function LoginScreen({ onSocialLogin }: Props) {
           </Text>
         </Pressable>
       </View>
+
     </View>
   );
 }
@@ -69,9 +73,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#03C75A',
   },
   kakaoIcon: {
+    width: 18,
+    height: 18,
     marginRight: 8,
-    fontSize: 18,
   },
+
   naverIcon: {
     marginRight: 8,
     fontSize: 18,
@@ -86,9 +92,9 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   logoImage: {
-  width: 160,     // 필요하면 조정 가능
-  height: 70,
-  marginBottom: 40,
-},
+    width: 160,     // 필요하면 조정 가능
+    height: 70,
+    marginBottom: 40,
+  },
 
 });
