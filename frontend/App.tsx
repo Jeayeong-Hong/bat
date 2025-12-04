@@ -1,6 +1,4 @@
-// App.tsx
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
 import Splash from './src/components/Splash';
 import LoginScreen from './src/screens/auth/LoginScreen';
@@ -16,6 +14,7 @@ import AlarmScreen from './src/screens/alarm/AlarmScreen';
 import AlarmSettingScreen from './src/screens/alarm/AlarmSettingScreen';
 import MyPageScreen from './src/screens/mypage/MyPageScreen';
 
+type SocialProvider = 'kakao' | 'naver';
 type Step =
   | 'splash'
   | 'login'
@@ -46,6 +45,23 @@ export default function App() {
     showBase: false,
     showBonus: false,
   });
+  useEffect(() => {
+    if (step === 'home') {
+      handleDailyCheckIn();   // 홈 들어오자마자 자동 출석
+    }
+  }, [step]);
+
+  // 소셜 로그인 처리 함수 (백엔드 연동 자리)
+  const handleSocialLogin = async (provider: SocialProvider) => {
+    // TODO: 여기서 백엔드 로그인 API 호출 예정
+    // 예시:
+    // const res = await fetch('https://api.bat-app.com/auth/social', { ... });
+    // const data = await res.json();
+    // accessToken, refreshToken, isNewUser, nickname 등을 받아서 분기
+
+    // 지금은 기존처럼 "신규 유저 플로우"만 유지
+    setStep('nickname');
+  };
 
   const getTodayKey = () => new Date().toISOString().slice(0, 10);
 
@@ -102,7 +118,7 @@ export default function App() {
     [false, false, false, false, false, false, false],
   );
   const [currentLeagueTier] = useState<LeagueTier>('iron');  // 우선 아이언으로 시작
-  /*
+  /* 백엔드 연결
   const [leagueUsers] = useState<LeagueUser[]>([]);
   const [leagueRemainingText] = useState<string>('');
   */
@@ -136,8 +152,9 @@ export default function App() {
       )}
 
       {step === 'login' && (
-        <LoginScreen onSocialLogin={() => setStep('nickname')} />
+        <LoginScreen onSocialLogin={handleSocialLogin} />
       )}
+
 
       {step === 'nickname' && (
         <NicknameScreen

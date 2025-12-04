@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 
 type Props = {
-  onSocialLogin: () => void; // 카카오/네이버 아무거나 누르면 다음으로
+  // ⬇️ 수정: 어떤 소셜인지 알려주도록 타입 변경
+  onSocialLogin: (provider: 'kakao' | 'naver') => void;
 };
 
 export default function LoginScreen({ onSocialLogin }: Props) {
@@ -15,7 +16,11 @@ export default function LoginScreen({ onSocialLogin }: Props) {
       />
 
       <View style={styles.buttonGroup}>
-        <Pressable style={[styles.button, styles.kakao]} onPress={onSocialLogin}>
+        {/* 카카오 로그인 */}
+        <Pressable
+          style={[styles.button, styles.kakao]}
+          onPress={() => onSocialLogin('kakao')}   // ⬅️ 여기
+        >
           <Image
             source={require('../../../assets/kakao.png')}
             style={styles.kakaoIcon}
@@ -24,7 +29,11 @@ export default function LoginScreen({ onSocialLogin }: Props) {
           <Text style={styles.buttonText}>카카오로 간편 로그인</Text>
         </Pressable>
 
-        <Pressable style={[styles.button, styles.naver]} onPress={onSocialLogin}>
+        {/* 네이버 로그인 */}
+        <Pressable
+          style={[styles.button, styles.naver]}
+          onPress={() => onSocialLogin('naver')}    // ⬅️ 그리고 여기
+        >
           <Text style={styles.naverIcon}>N</Text>
           <Text style={[styles.buttonText, styles.naverText]}>
             네이버로 간편 로그인
