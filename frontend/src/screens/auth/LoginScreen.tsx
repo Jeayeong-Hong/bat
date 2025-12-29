@@ -1,0 +1,109 @@
+import React from 'react';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
+
+type Props = {
+  // ⬇️ 수정: 어떤 소셜인지 알려주도록 타입 변경
+  onSocialLogin: (provider: 'kakao' | 'naver') => void;
+};
+
+export default function LoginScreen({ onSocialLogin }: Props) {
+  return (
+    <View style={styles.container}>
+      <Image
+        source={require('../../../assets/bat-logo.png')}
+        style={styles.logoImage}
+        resizeMode="contain"
+      />
+
+      <View style={styles.buttonGroup}>
+        {/* 카카오 로그인 */}
+        <Pressable
+          style={[styles.button, styles.kakao]}
+          onPress={() => onSocialLogin('kakao')}   // ⬅️ 여기
+        >
+          <Image
+            source={require('../../../assets/kakao.png')}
+            style={styles.kakaoIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.buttonText}>카카오로 간편 로그인</Text>
+        </Pressable>
+
+        {/* 네이버 로그인 */}
+        <Pressable
+          style={[styles.button, styles.naver]}
+          onPress={() => onSocialLogin('naver')}    // ⬅️ 그리고 여기
+        >
+          <Text style={styles.naverIcon}>N</Text>
+          <Text style={[styles.buttonText, styles.naverText]}>
+            네이버로 간편 로그인
+          </Text>
+        </Pressable>
+      </View>
+
+    </View>
+  );
+}
+
+const BG = '#F3F4F6';
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: BG,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 32,
+  },
+  logo: {
+    fontSize: 56,
+    fontWeight: '900',
+    letterSpacing: 4,
+    color: '#5E82FF',
+  },
+  buttonGroup: {
+    alignItems: 'center', // 가운데 정렬
+    gap: 16,
+  },
+  button: {
+    width: 309,
+    height: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    elevation: 2,
+  },
+
+  kakao: {
+    backgroundColor: '#FEE500',
+  },
+  naver: {
+    backgroundColor: '#03C75A',
+  },
+  kakaoIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 8,
+  },
+
+  naverIcon: {
+    marginRight: 8,
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#fff',
+  },
+  buttonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  naverText: {
+    color: '#fff',
+  },
+  logoImage: {
+    width: 160,     // 필요하면 조정 가능
+    height: 70,
+    marginBottom: 40,
+  },
+
+});
