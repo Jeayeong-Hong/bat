@@ -17,6 +17,7 @@ import TakePicture from './src/screens/input_data/TakePicture';
 import SelectPicture from './src/screens/input_data/SelectPicture';
 import TalkingStudyScreen from './src/screens/study/TalkingStudyScreen';
 import ScaffoldingScreen from './src/screens/study/ScaffoldingScreen';
+import { runOcr } from './src/api/ocr';
 
 type SocialProvider = 'kakao' | 'naver';
 type Step =
@@ -155,7 +156,35 @@ export default function App() {
   };
   //촬영 결과 임시로 App으로 이동
   const [capturedSources, setCapturedSources] = useState<ImageSourcePropType[]>([]);
+  type ScaffoldingPayload = {
+    title: string;
+    extractedText: string;
+    blanks: Array<{ id: number; word: string; meaningLong?: string }>;
+  };
 
+  const [scaffoldingPayload, setScaffoldingPayload] = useState<ScaffoldingPayload | null>(null);
+  const [scaffoldingLoading, setScaffoldingLoading] = useState(false);
+  const [scaffoldingError, setScaffoldingError] = useState<string | null>(null);
+
+  function buildBlankWordsFromText(text: string, limit = 8) {
+    // 1) 공백/문장부호 기준 분리
+    const raw = text
+      .replace(/[0-9]/g, ' ')
+      .replace(/[.,!?()\[\]{}"“”‘’]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(' ');
+
+    // 2) 너무 짧은 토큰 제거 + 중복 제거
+    const uniq: string[] = [];
+    for (const w of raw) {
+      const clean = w.trim();
+      if (clean.length < 2) continue;
+      if (!uniq.includes(clean)) uniq.push(clean);
+      if (uniq.length >= limit) break;
+    }
+    return uniq;
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -276,10 +305,45 @@ export default function App() {
         <SelectPicture
           sources={capturedSources}
           onBack={() => setStep('takePicture')}
-          onStartLearning={(finalSources) => {
+          onStartLearning={async (finalSources) => {
             setCapturedSources(finalSources);
+
+            // 1) OCR 요청 (ocr_app.py는 file 1개만 받으므로 우선 첫 이미지 사용) :contentReference[oaicite:6]{index=6}
+            const first = finalSources[0] as any;
+            const uri = first?.uri as string | undefined;
+
+            if (!uri) {
+              setScaffoldingError('이미지 URI를 찾을 수 없습니다.');
+              setScaffoldingPayload(null);
+              setStep('talkingStudy');
+              return;
+            }
+
+            setScaffoldingLoading(true);
+            setScaffoldingError(null);
+
+            try {
+              const extractedText = await runOcr(uri);
+
+              // 2) 임시 blank_words 생성 (추후 백엔드 AI 선정으로 교체)
+              const words = buildBlankWordsFromText(extractedText, 8);
+
+              setScaffoldingPayload({
+                title: '대표 결정 방식', // 지금 백엔드에 subject_name 연동 전이므로 임시
+                extractedText,
+                blanks: words.map((w, i) => ({ id: i + 1, word: w })),
+              });
+            } catch (e: any) {
+              setScaffoldingPayload(null);
+              setScaffoldingError(e?.message ?? 'OCR 호출에 실패했습니다.');
+            } finally {
+              setScaffoldingLoading(false);
+            }
+
+            // 3) 기존 흐름 유지
             setStep('talkingStudy');
           }}
+
         />
       )}
       {step === 'talkingStudy' && (
@@ -295,7 +359,33 @@ export default function App() {
           onBack={() => setStep('talkingStudy')}
           sources={capturedSources}
           selectedIndex={selectedSourceIndex}
+          payload={scaffoldingPayload}
+          loading={scaffoldingLoading}
+          error={scaffoldingError}
+          onRetry={async () => {
+            const first = capturedSources[0] as any;
+            const uri = first?.uri as string | undefined;
+            if (!uri) return;
+
+            setScaffoldingLoading(true);
+            setScaffoldingError(null);
+            try {
+              const extractedText = await runOcr(uri);
+              const words = buildBlankWordsFromText(extractedText, 8);
+              setScaffoldingPayload({
+                title: '대표 결정 방식',
+                extractedText,
+                blanks: words.map((w, i) => ({ id: i + 1, word: w })),
+              });
+            } catch (e: any) {
+              setScaffoldingPayload(null);
+              setScaffoldingError(e?.message ?? '재시도에 실패했습니다.');
+            } finally {
+              setScaffoldingLoading(false);
+            }
+          }}
         />
+
       )}
 
 
