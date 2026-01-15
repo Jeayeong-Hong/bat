@@ -16,6 +16,7 @@ type Props = {
 
 export default function NicknameScreen({ onConfirm }: Props) {
     const [nickname, setNickname] = useState('');
+    const [errorText, setErrorText] = useState('');
 
     const trimmed = nickname.trim();
     const isValid = trimmed.length > 0;
@@ -31,6 +32,26 @@ export default function NicknameScreen({ onConfirm }: Props) {
     const handleSubmit = () => {
         if (!isValid) return;
         onConfirm(trimmed);
+    };
+    const handleChangeNickname = (text: string) => {
+        setNickname(text);
+
+        if (text.length === 0) {
+            setErrorText('');
+            return;
+        }
+
+        if (text.length < 2) {
+            setErrorText('닉네임이 너무 짧습니다. 최소 2자 이상 입력해 주세요');
+            return;
+        }
+
+        if (text.length > 10) {
+            setErrorText('닉네임이 너무 깁니다. 최대 10자 이내로 입력해 주세요');
+            return;
+        }
+
+        setErrorText('');
     };
 
     return (
@@ -49,15 +70,11 @@ export default function NicknameScreen({ onConfirm }: Props) {
 
                     <View style={styles.inputWrapper}>
                         <TextInput
-                            style={styles.input}
+                            value={nickname}
+                            onChangeText={handleChangeNickname}
                             placeholder="닉네임 입력"
                             placeholderTextColor="#9CA3AF"
-                            value={nickname}
-                            onChangeText={handleChange}
-                            returnKeyType="done"
-                            onSubmitEditing={handleSubmit}
-                            autoCapitalize="none"
-                            autoCorrect={false}
+                            style={styles.input}
                         />
 
                         {nickname.length > 0 && (
@@ -66,6 +83,10 @@ export default function NicknameScreen({ onConfirm }: Props) {
                             </Pressable>
                         )}
                     </View>
+
+                    <Text style={[styles.helperText, !errorText && { opacity: 0 }]}>
+                        {errorText || ' '}
+                    </Text>
 
                     <Pressable
                         style={[
@@ -112,7 +133,7 @@ const styles = StyleSheet.create({
         marginBottom: scale(24),
     },
     inputWrapper: {
-        marginBottom: scale(24),
+        marginBottom: scale(4),
         position: 'relative',
     },
     input: {
@@ -121,6 +142,7 @@ const styles = StyleSheet.create({
         paddingVertical: scale(10),
         paddingRight: scale(32),
         fontSize: fontScale(18),
+        paddingHorizontal: scale(8),
     },
     clearBtn: {
         position: 'absolute',
@@ -150,4 +172,13 @@ const styles = StyleSheet.create({
         fontSize: fontScale(35),
         fontWeight: '700',
     },
+    helperText: {
+        marginTop: scale(2),
+        height: fontScale(14),
+        fontSize: fontScale(14),
+        color: '#EF4444',
+        marginBottom: scale(4),
+        paddingHorizontal: scale(8),
+    },
+
 });
