@@ -69,6 +69,7 @@ type Props = {
   monthlyGoal?: number | null;
   //
   onNavigate: (screen: 'home' | 'league' | 'alarm' | 'mypage' | 'takePicture' | 'brushup') => void;
+  onLogout?: () => void;
 };
 
 export default function HomeScreen({
@@ -87,6 +88,7 @@ export default function HomeScreen({
   monthlyStats,
   monthlyGoal,
   onNavigate,
+  onLogout,
 }: Props) {
   const characterSource = getCharacterSourceByType(typeLabel);
   const expProgress = Math.min(exp / 100, 1);
@@ -101,7 +103,7 @@ export default function HomeScreen({
       <Sidebar
         activeScreen="home"
         onNavigate={onNavigate}
-        onLogout={() => confirmLogout(() => onNavigate('home'))}
+        onLogout={() => confirmLogout(onLogout)}
       />
 
       {/* 우측 메인 영역 */}

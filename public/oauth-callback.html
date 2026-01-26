@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>OAuth Callback</title>
+</head>
+
+<body>
+    <script>
+        // URL에서 code 파라미터 추출
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+
+        if (code) {
+            // 부모 창(opener)에 code 전달
+            if (window.opener) {
+                window.opener.postMessage({ type: 'oauth-code', code }, '*');
+                window.close();
+            }
+        } else if (error) {
+            // 에러 전달
+            if (window.opener) {
+                window.opener.postMessage({ type: 'oauth-error', error }, '*');
+                window.close();
+            }
+        } else {
+            // code도 error도 없으면 그냥 닫기
+            setTimeout(() => window.close(), 1000);
+        }
+    </script>
+    <p>로그인 처리 중...</p>
+</body>
+
+</html>

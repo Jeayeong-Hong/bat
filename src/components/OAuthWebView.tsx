@@ -18,6 +18,30 @@ export default function OAuthWebView({ visible, provider, oauthUrl, onCode, onCl
     useEffect(() => {
         if (!visible || Platform.OS !== 'web') return;
 
+        // postMessage 리스너 설정
+        const handleMessage = (event: MessageEvent) => {
+            // 보안: origin 체크는 프로덕션에서 필수
+            if (event.data && event.data.type === 'oauth-code') {
+                console.log('OAuth code 수신:', event.data.code);
+                onCode(event.data.code);
+                onClose();
+            } else if (event.data && event.data.type === 'oauth-success') {
+                // 백엔드에서 직접 처리된 경우 - 응답 데이터를 그대로 사용
+                console.log('OAuth 성공 응답 수신:', event.data.data);
+                // 모든 응답을 __DIRECT_RESPONSE__ 형식으로 전달
+                if (event.data.data) {
+                    onCode(`__DIRECT_RESPONSE__${JSON.stringify(event.data.data)}`);
+                    onClose();
+                }
+            } else if (event.data && event.data.type === 'oauth-error') {
+                console.error('OAuth 에러:', event.data.error);
+                alert('로그인 중 오류가 발생했습니다: ' + event.data.error);
+                onClose();
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+
         // 웹 환경: 새 창으로 OAuth 페이지 열기
         const width = 500;
         const height = 600;
@@ -30,32 +54,17 @@ export default function OAuthWebView({ visible, provider, oauthUrl, onCode, onCl
             `width=${width},height=${height},left=${left},top=${top}`
         );
 
-        // 팝업에서 리다이렉트 감지
+        // 팝업이 닫혔는지 주기적으로 확인
         const interval = setInterval(() => {
-            try {
-                if (popup && popup.location.href.includes('/auth/') && popup.location.href.includes('/mobile')) {
-                    const urlParams = new URLSearchParams(popup.location.search);
-                    const code = urlParams.get('code');
-
-                    if (code) {
-                        onCode(code);
-                        popup.close();
-                        onClose();
-                        clearInterval(interval);
-                    }
-                }
-            } catch (e) {
-                // Cross-origin 에러는 무시 (다른 도메인에 있을 때)
-            }
-
-            // 팝업이 닫혔는지 확인
             if (popup && popup.closed) {
                 clearInterval(interval);
+                // 사용자가 팝업을 그냥 닫은 경우
                 onClose();
             }
         }, 500);
 
         return () => {
+            window.removeEventListener('message', handleMessage);
             clearInterval(interval);
             if (popup && !popup.closed) {
                 popup.close();

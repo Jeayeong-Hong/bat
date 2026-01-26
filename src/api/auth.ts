@@ -103,12 +103,13 @@ export function getOAuthUrl(provider: 'kakao' | 'naver'): string {
     const KAKAO_REST_API_KEY = '5202f1b3b542b79fdf499d766362bef6';
     const NAVER_CLIENT_ID = 'DRk2JpSbhKJO6ImkKIE9';
 
+    // 백엔드 리다이렉트 URI 사용 (웹/모바일 모두)
     const REDIRECT_URI = `${API_BASE_URL}/auth/${provider}/mobile`;
 
     if (provider === 'kakao') {
-        return `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+        return `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`;
     } else {
-        return `https://nid.naver.com/oauth2.0/authorize?client_id=${NAVER_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+        return `https://nid.naver.com/oauth2.0/authorize?client_id=${NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`;
     }
 }
 

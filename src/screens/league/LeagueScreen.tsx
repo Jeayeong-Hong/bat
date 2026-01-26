@@ -33,6 +33,7 @@ type Props = {
     currentTier: LeagueTier;
     users: LeagueUser[];     // 순위 순서로 정렬된 배열 (1등 → n등)
     remainingText: string;   // 예: "남은 시간: 3일 19시간 30분"
+    onLogout?: () => void;
 };
 
 // 리그 이름 레이블
@@ -93,6 +94,7 @@ export default function LeagueScreen({
     currentTier,
     users,
     remainingText,
+    onLogout,
 }: Props) {
     const total = users.length;
     const promotionBorder = 6;           // 상위 5명 승급 → 6등 앞에 승급존
@@ -103,7 +105,7 @@ export default function LeagueScreen({
             <Sidebar
                 activeScreen="league"
                 onNavigate={onNavigate}
-                onLogout={() => confirmLogout(() => onNavigate('home'))}
+                onLogout={() => confirmLogout(onLogout)}
             />
 
             {/* 우측 리그 메인 영역 */}

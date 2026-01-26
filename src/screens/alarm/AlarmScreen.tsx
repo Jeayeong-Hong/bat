@@ -14,6 +14,7 @@ type Screen = 'home' | 'league' | 'alarm' | 'alarmSetting';
 
 type Props = {
     onNavigate: (screen: Screen) => void;
+    onLogout?: () => void;
 };
 
 /** 알림 타입 */
@@ -83,7 +84,7 @@ const initialAlarms: AlarmSection[] = [
 
 const BG = '#F6F7FB';
 
-export default function AlarmScreen({ onNavigate }: Props) {
+export default function AlarmScreen({ onNavigate, onLogout }: Props) {
     // 나중에는 백엔드에서 받아오면 됨. 지금은 더미로 상태만 연결.
     const [sections] = useState<AlarmSection[]>(initialAlarms);
 

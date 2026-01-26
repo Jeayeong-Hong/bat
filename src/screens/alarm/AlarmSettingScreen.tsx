@@ -20,11 +20,12 @@ type ActivePicker = null | 'review' | 'dndStart' | 'dndEnd';
 type Props = {
     // App.tsx에서 step을 'alarm'으로 되돌리기 위해 사용
     onNavigate: (screen: 'alarm') => void;
+    onLogout?: () => void;
 };
 
 const BG = '#FFFFFF';
 
-export default function AlarmSettingScreen({ onNavigate }: Props) {
+export default function AlarmSettingScreen({ onNavigate, onLogout }: Props) {
     // 토글 상태
     const [reviewEnabled, setReviewEnabled] = useState(true);
     const [leagueEnabled, setLeagueEnabled] = useState(true);

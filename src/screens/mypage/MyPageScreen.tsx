@@ -36,6 +36,7 @@ type Props = {
     onNavigate: (screen: Screen) => void;
     onMonthlyGoalChange?: (goal: number) => void;
     onNicknameChange?: (nickname: string) => void;
+    onLogout?: () => void;
 };
 
 // 홈 화면에서 쓰는 것과 같은 유형별 캐릭터 매핑 함수
@@ -70,6 +71,7 @@ export default function MyPageScreen({
     onNavigate,
     onMonthlyGoalChange,
     onNicknameChange,
+    onLogout,
 }: Props) {
     const characterSource = getCharacterSourceByType(typeLabel);
 
@@ -224,7 +226,7 @@ export default function MyPageScreen({
             <Sidebar
                 activeScreen="mypage"
                 onNavigate={onNavigate}
-                onLogout={() => confirmLogout(() => onNavigate('home'))}
+                onLogout={() => confirmLogout(onLogout)}
             />
 
             {/* 우측 마이페이지 메인 */}

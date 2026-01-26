@@ -25,7 +25,7 @@ export default function NicknameScreen({ email, socialId, onNicknameSet }: Props
     const [errorText, setErrorText] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // 🔧 임시: 백엔드 없이 테스트 (나중에 삭제)
+    // 임시: 백엔드 문제로 스킵 가능하게
     const MOCK_MODE = true;
 
     const trimmed = nickname.trim();
@@ -34,6 +34,11 @@ export default function NicknameScreen({ email, socialId, onNicknameSet }: Props
     const handleClear = () => {
         setNicknameValue('');
         setErrorText('');
+    };
+
+    // 스킵 버튼 - 임시로 홈으로 바로 이동
+    const handleSkip = () => {
+        onNicknameSet(email, `사용자${socialId.slice(-6)}`);
     };
 
     const handleSubmit = async () => {
@@ -138,6 +143,14 @@ export default function NicknameScreen({ email, socialId, onNicknameSet }: Props
                             <Text style={styles.buttonText}>확인</Text>
                         )}
                     </Pressable>
+
+                    {/* 임시 스킵 버튼 */}
+                    <Pressable
+                        style={styles.skipButton}
+                        onPress={handleSkip}
+                    >
+                        <Text style={styles.skipText}>나중에 설정하기 (임시)</Text>
+                    </Pressable>
                 </View>
             </View>
         </View>
@@ -211,6 +224,16 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: fontScale(35),
         fontWeight: '700',
+    },
+    skipButton: {
+        marginTop: scale(16),
+        padding: scale(12),
+        alignItems: 'center',
+    },
+    skipText: {
+        color: '#9CA3AF',
+        fontSize: fontScale(14),
+        textDecorationLine: 'underline',
     },
     helperText: {
         marginTop: scale(2),

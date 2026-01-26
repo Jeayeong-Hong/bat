@@ -19,7 +19,7 @@ import TalkingStudyScreen from './src/screens/study/TalkingStudyScreen';
 import ScaffoldingScreen from './src/screens/study/ScaffoldingScreen';
 import BrushUPScreen from './src/screens/brushUP/BrushUPScreen';
 import { runOcr, ScaffoldingPayload, saveTest, getWeeklyGrowth, getMonthlyStats } from './src/api/ocr';
-import { getToken, getUserInfo, saveAuthData } from './src/lib/storage';
+import { getToken, getUserInfo, saveAuthData, clearAuthData } from './src/lib/storage';
 
 type SocialProvider = 'kakao' | 'naver';
 type Step =
@@ -66,10 +66,23 @@ export default function App() {
   }, []);
 
   const checkAutoLogin = async () => {
+    // 임시: 자동 로그인 비활성화 - 무조건 로그인 화면으로
+    try {
+      // 기존 캐시 강제 클리어
+      await clearAuthData();
+      console.log('캐시 클리어 완료 - 로그인 화면으로 이동');
+    } catch (error) {
+      console.error('캐시 클리어 오류:', error);
+    }
+    setTimeout(() => setStep('login'), 2000);
+    
+    /* 원래 코드 (자동 로그인 활성화 시 주석 해제)
     try {
       const token = await getToken();
+      console.log('자동 로그인 체크 - 토큰:', token ? '존재' : '없음');
       if (token) {
         const userInfo = await getUserInfo();
+        console.log('저장된 사용자 정보:', userInfo);
         if (userInfo.email && userInfo.nickname) {
           setUserEmail(userInfo.email);
           setNickname(userInfo.nickname);
@@ -78,11 +91,41 @@ export default function App() {
           return;
         }
       }
-      // 토큰 없으면 목표 설정 화면으로
-      setTimeout(() => setStep('goal'), 2000);
+      // 토큰 없으면 로그인 화면으로
+      setTimeout(() => setStep('login'), 2000);
     } catch (error) {
       console.error('자동 로그인 확인 오류:', error);
-      setTimeout(() => setStep('goal'), 2000);
+      setTimeout(() => setStep('login'), 2000);
+    }
+    */
+  };
+
+  // 로그아웃 처리
+  const handleLogout = async () => {
+    try {
+      console.log('로그아웃 시작');
+      // AsyncStorage 클리어
+      await clearAuthData();
+      console.log('AsyncStorage 클리어 완료');
+      
+      // 모든 상태 초기화
+      setNickname('');
+      setUserEmail('');
+      setUserSocialId('');
+      setTypeResult(null);
+      setTypeLabel('');
+      setLevel(1);
+      setExp(0);
+      setMonthlyGoal(null);
+      setStreak(0);
+      setLastAttendanceDate(null);
+      
+      console.log('상태 초기화 완료, 로그인 화면으로 이동');
+      setStep('login');
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+      // 오류가 있어도 로그인 화면으로
+      setStep('login');
     }
   };
 
@@ -110,7 +153,7 @@ export default function App() {
   const handleLoginSuccess = async (email: string, userNickname: string) => {
     setUserEmail(email);
     setNickname(userNickname);
-    
+
     // 바로 홈 화면으로 이동
     setStep('home');
   };
@@ -126,7 +169,7 @@ export default function App() {
   const handleNicknameSet = (email: string, userNickname: string) => {
     setUserEmail(email);
     setNickname(userNickname);
-    setStep('goal');  // 신규 유저는 목표 설정으로
+    setStep('goal');  // 목표 설정 -> 학습 유형 테스트로
   };
 
   const getTodayKey = () => new Date().toISOString().slice(0, 10);
@@ -316,6 +359,7 @@ export default function App() {
           monthlyStats={monthlyStats}
           monthlyGoal={monthlyGoal}
           onNavigate={(screen) => setStep(screen)}
+          onLogout={handleLogout}
         />
       )}
 
@@ -325,16 +369,19 @@ export default function App() {
           currentTier={currentLeagueTier}
           users={leagueUsers}
           remainingText={leagueRemainingText}
+          onLogout={handleLogout}
         />
       )}
       {step === 'alarm' && (
         <AlarmScreen
           onNavigate={(screen) => setStep(screen)}
+          onLogout={handleLogout}
         />
       )}
       {step === 'alarmSetting' && (
         <AlarmSettingScreen
           onNavigate={(screen) => setStep(screen as Step)}
+          onLogout={handleLogout}
         />
       )}
       {step === 'mypage' && (
@@ -347,6 +394,7 @@ export default function App() {
           monthlyGoal={monthlyGoal}
           onNavigate={(screen) => setStep(screen)}
           onMonthlyGoalChange={(goal) => setMonthlyGoal(goal)}
+          onLogout={handleLogout}
         />
       )}
 
