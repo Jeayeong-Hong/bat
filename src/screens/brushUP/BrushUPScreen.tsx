@@ -92,82 +92,107 @@ export default function BrushUPScreen({ onBack }: Props) {
         return subject?.emoji ?? '📚';
     };
 
+    const filteredCards = selectedSubject === 'all'
+        ? MOCK_CARDS
+        : MOCK_CARDS.filter(card => {
+            const subject = SUBJECTS.find(s => s.name === card.subject);
+            return subject?.id === selectedSubject;
+        });
+
     return (
         <View style={styles.root}>
-            {/* 헤더 */}
-            <View style={styles.header}>
-                <Pressable style={styles.backBtn} onPress={onBack} hitSlop={10}>
+            {/* 왼쪽 사이드바 */}
+            <View style={styles.sidebar}>
+                <Pressable
+                    style={[styles.sidebarBtn, styles.sidebarBtnActive]}
+                    onPress={() => { }}
+                >
                     <Image
-                        source={require('../../../assets/shift.png')}
-                        style={styles.backIcon}
+                        source={require('../../../assets/homebutton/review.png')}
+                        style={styles.sidebarIcon}
                         resizeMode="contain"
                     />
                 </Pressable>
-                <Text style={styles.headerTitle}>복습</Text>
             </View>
 
-            {/* 과목 필터 */}
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.subjectScroll}
-            >
-                {SUBJECTS.map((subject) => (
-                    <Pressable
-                        key={subject.id}
-                        style={[
-                            styles.subjectChip,
-                            selectedSubject === subject.id && styles.subjectChipActive,
-                        ]}
-                        onPress={() => setSelectedSubject(subject.id)}
-                    >
-                        <Text style={styles.subjectEmoji}>{subject.emoji}</Text>
-                        <Text
+            {/* 메인 컨텐츠 */}
+            <View style={styles.mainContent}>
+                {/* 헤더 */}
+                <View style={styles.header}>
+                    <Pressable style={styles.backBtn} onPress={onBack} hitSlop={10}>
+                        <Image
+                            source={require('../../../assets/shift.png')}
+                            style={styles.backIcon}
+                            resizeMode="contain"
+                        />
+                    </Pressable>
+                    <Text style={styles.headerTitle}>복습</Text>
+                </View>
+
+                {/* 과목 필터 */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.subjectScroll}
+                >
+                    {SUBJECTS.map((subject) => (
+                        <Pressable
+                            key={subject.id}
                             style={[
-                                styles.subjectText,
-                                selectedSubject === subject.id && styles.subjectTextActive,
+                                styles.subjectChip,
+                                selectedSubject === subject.id && styles.subjectChipActive,
                             ]}
+                            onPress={() => setSelectedSubject(subject.id)}
                         >
-                            {subject.name}
-                        </Text>
-                    </Pressable>
-                ))}
-            </ScrollView>
-
-            {/* 검색 버튼 */}
-            <Pressable style={styles.searchBtn}>
-                <Text style={styles.searchIcon}>🔍</Text>
-            </Pressable>
-
-            {/* 카드 목록 */}
-            <ScrollView contentContainerStyle={styles.cardList}>
-                {MOCK_CARDS.map((card) => (
-                    <Pressable key={card.id} style={styles.card}>
-                        {/* X 버튼 */}
-                        <Pressable style={styles.closeBtn} hitSlop={10}>
-                            <Text style={styles.closeText}>×</Text>
+                            <Text style={styles.subjectEmoji}>{subject.emoji}</Text>
+                            <Text
+                                style={[
+                                    styles.subjectText,
+                                    selectedSubject === subject.id && styles.subjectTextActive,
+                                ]}
+                            >
+                                {subject.name}
+                            </Text>
                         </Pressable>
+                    ))}
+                </ScrollView>
 
-                        {/* 제목 + 과목 아이콘 */}
-                        <View style={styles.cardHeader}>
-                            <Text style={styles.cardTitle}>{card.title}</Text>
-                            <Text style={styles.cardSubjectIcon}>{getSubjectIcon(card.subject)}</Text>
-                        </View>
+                {/* 검색 바 */}
+                <View style={styles.searchBar}>
+                    <Text style={styles.searchIcon}>🔍</Text>
+                    <Text style={styles.searchPlaceholder}>학습 내용 검색</Text>
+                </View>
 
-                        {/* 과목명 */}
-                        <Text style={styles.cardSubject}>{card.subject}</Text>
+                {/* 카드 목록 */}
+                <ScrollView contentContainerStyle={styles.cardList}>
+                    {filteredCards.map((card) => (
+                        <Pressable key={card.id} style={styles.card}>
+                            {/* X 버튼 */}
+                            <Pressable style={styles.closeBtn} hitSlop={10}>
+                                <Text style={styles.closeText}>×</Text>
+                            </Pressable>
 
-                        {/* 설명 */}
-                        <Text style={styles.cardDesc}>{card.description}</Text>
+                            {/* 제목 + 과목 아이콘 */}
+                            <View style={styles.cardHeader}>
+                                <Text style={styles.cardTitle}>{card.title}</Text>
+                                <Text style={styles.cardSubjectIcon}>{getSubjectIcon(card.subject)}</Text>
+                            </View>
 
-                        {/* 정답률 + 기간 */}
-                        <View style={styles.cardFooter}>
-                            <Text style={styles.cardProgress}>정답률: {card.progress}%</Text>
-                            <Text style={styles.cardDays}>{card.daysAgo}일 전</Text>
-                        </View>
-                    </Pressable>
-                ))}
-            </ScrollView>
+                            {/* 과목명 */}
+                            <Text style={styles.cardSubject}>{card.subject}</Text>
+
+                            {/* 설명 */}
+                            <Text style={styles.cardDesc}>{card.description}</Text>
+
+                            {/* 정답률 + 기간 */}
+                            <View style={styles.cardFooter}>
+                                <Text style={styles.cardProgress}>정답률: {card.progress}%</Text>
+                                <Text style={styles.cardDays}>{card.daysAgo}일 전</Text>
+                            </View>
+                        </Pressable>
+                    ))}
+                </ScrollView>
+            </View>
         </View>
     );
 }
@@ -175,7 +200,34 @@ export default function BrushUPScreen({ onBack }: Props) {
 const styles = StyleSheet.create({
     root: {
         flex: 1,
+        flexDirection: 'row',
         backgroundColor: '#F6F7FB',
+    },
+    sidebar: {
+        width: scale(80),
+        backgroundColor: '#FFFFFF',
+        borderRightWidth: 1,
+        borderRightColor: '#E5E7EB',
+        paddingTop: scale(20),
+        paddingHorizontal: scale(16),
+    },
+    sidebarBtn: {
+        width: scale(48),
+        height: scale(48),
+        borderRadius: scale(12),
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: scale(12),
+    },
+    sidebarBtnActive: {
+        backgroundColor: '#EEF1FF',
+    },
+    sidebarIcon: {
+        width: scale(28),
+        height: scale(28),
+    },
+    mainContent: {
+        flex: 1,
         paddingTop: scale(16),
     },
     header: {
@@ -234,25 +286,26 @@ const styles = StyleSheet.create({
     subjectTextActive: {
         color: '#FFFFFF',
     },
-    searchBtn: {
-        position: 'absolute',
-        right: scale(18),
-        top: scale(120),
-        width: scale(48),
-        height: scale(48),
-        borderRadius: scale(24),
-        backgroundColor: '#FFFFFF',
+    searchBar: {
+        marginHorizontal: scale(18),
+        marginBottom: scale(16),
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-        zIndex: 10,
+        backgroundColor: '#FFFFFF',
+        borderRadius: scale(12),
+        paddingHorizontal: scale(16),
+        paddingVertical: scale(14),
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        gap: scale(10),
     },
     searchIcon: {
-        fontSize: fontScale(24),
+        fontSize: fontScale(18),
+    },
+    searchPlaceholder: {
+        fontSize: fontScale(14),
+        fontWeight: '600',
+        color: '#9CA3AF',
     },
     cardList: {
         paddingHorizontal: scale(18),

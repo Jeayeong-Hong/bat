@@ -66,17 +66,6 @@ export default function App() {
   }, []);
 
   const checkAutoLogin = async () => {
-    // 임시: 자동 로그인 비활성화 - 무조건 로그인 화면으로
-    try {
-      // 기존 캐시 강제 클리어
-      await clearAuthData();
-      console.log('캐시 클리어 완료 - 로그인 화면으로 이동');
-    } catch (error) {
-      console.error('캐시 클리어 오류:', error);
-    }
-    setTimeout(() => setStep('login'), 2000);
-    
-    /* 원래 코드 (자동 로그인 활성화 시 주석 해제)
     try {
       const token = await getToken();
       console.log('자동 로그인 체크 - 토큰:', token ? '존재' : '없음');
@@ -97,7 +86,6 @@ export default function App() {
       console.error('자동 로그인 확인 오류:', error);
       setTimeout(() => setStep('login'), 2000);
     }
-    */
   };
 
   // 로그아웃 처리
@@ -107,7 +95,7 @@ export default function App() {
       // AsyncStorage 클리어
       await clearAuthData();
       console.log('AsyncStorage 클리어 완료');
-      
+
       // 모든 상태 초기화
       setNickname('');
       setUserEmail('');
@@ -119,7 +107,7 @@ export default function App() {
       setMonthlyGoal(null);
       setStreak(0);
       setLastAttendanceDate(null);
-      
+
       console.log('상태 초기화 완료, 로그인 화면으로 이동');
       setStep('login');
     } catch (error) {

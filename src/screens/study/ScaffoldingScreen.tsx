@@ -16,8 +16,24 @@ import {
 import { scale, fontScale } from '../../lib/layout';
 import { saveTest } from '../../api/ocr';
 
-type Step = '1-1' | '1-2' | '1-3';
+type Round = 1 | 2 | 3;
+type SubStep = 1 | 2 | 3;
+type Step = '1-1' | '1-2' | '1-3' | '2-1' | '2-2' | '2-3' | '3-1' | '3-2' | '3-3';
 type GradeState = 'idle' | 'correct' | 'wrong';
+
+const ROUND_CONFIGS = {
+    1: { start: 0, end: 5, total: 5 },
+    2: { start: 5, end: 12, total: 12 },
+    3: { start: 12, end: 20, total: 20 },
+};
+
+const getCurrentRound = (step: Step): Round => {
+    return parseInt(step.split('-')[0]) as Round;
+};
+
+const getCurrentSubStep = (step: Step): SubStep => {
+    return parseInt(step.split('-')[1]) as SubStep;
+};
 
 export type BlankItem = {
     id: number;
@@ -86,6 +102,7 @@ export default function ScaffoldingScreen({
     }
 
     const [step, setStep] = useState<Step>('1-1');
+    const [cumulativeCorrect, setCumulativeCorrect] = useState<Set<number>>(new Set());
 
     const title = payload.title ?? '';
     const extractedText = payload.extractedText ?? '';
@@ -121,36 +138,40 @@ export default function ScaffoldingScreen({
             }));
     }, [tokens, baseInfoByWord]);
 
+    const currentRoundKeywords = useMemo(() => {
+        const round = getCurrentRound(step);
+        const config = ROUND_CONFIGS[round];
+        return keywordInstances.slice(config.start, config.end);
+    }, [step, keywordInstances]);
+
     /** 입력/채점 상태: instanceId 기준 */
     const inputRefs = useRef<Record<number, TextInput | null>>({});
     const [activeBlankId, setActiveBlankId] = useState<number | null>(null);
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [graded, setGraded] = useState<Record<number, GradeState>>({});
 
-    const totalBars = 20;
-    const correctCount = useMemo(
-        () => Object.values(graded).filter((g) => g === 'correct').length,
-        [graded]
-    );
+    const round = getCurrentRound(step);
+    const subStep = getCurrentSubStep(step);
+    const totalBars = ROUND_CONFIGS[round].total;
+    const correctCount = cumulativeCorrect.size;
 
     const barStates: GradeState[] = useMemo(() => {
         const arr: GradeState[] = Array.from({ length: totalBars }, () => 'idle');
-        if (step !== '1-3') return arr;
+        if (subStep !== 3) return arr;
         keywordInstances.slice(0, totalBars).forEach((ins, idx) => {
-            arr[idx] = graded[ins.instanceId] ?? 'idle';
+            arr[idx] = cumulativeCorrect.has(ins.instanceId) ? 'correct' : 'wrong';
         });
         return arr;
-    }, [keywordInstances, graded, step]);
+    }, [keywordInstances, cumulativeCorrect, subStep, totalBars]);
 
-    const roundLabel =
-        step === '1-1' ? 'Round 1 - 단어 확인' : step === '1-2' ? 'Round 1 - 빈칸 학습' : 'Round 1 - 학습 채점';
+    const roundLabel = `Round ${round} - ${subStep === 1 ? '단어 확인' : subStep === 2 ? '빈칸 학습' : '학습 채점'}`;
 
     const onReselectWords = () => {
         Alert.alert('단어 재선정', '추후 백엔드/AI 단어 재선정 API로 교체할 예정입니다.');
     };
     const onStartLearning = () => {
         setSelectedWord(null);
-        setStep('1-2');
+        setStep(`${round}-2` as Step);
     };
     const onLongPressBlank = () => {
         Alert.alert('힌트', '추후 기능입니다. (롱프레스 로직만 구현됨)');
@@ -160,18 +181,25 @@ export default function ScaffoldingScreen({
         requestAnimationFrame(() => inputRefs.current[instanceId]?.focus());
     };
     const onGrade = () => {
+        const newCorrect = new Set(cumulativeCorrect);
         const next: Record<number, GradeState> = {};
-        keywordInstances.forEach((ins) => {
+
+        currentRoundKeywords.forEach((ins) => {
             const user = (answers[ins.instanceId] ?? '').trim();
-            next[ins.instanceId] = normalize(user) === normalize(ins.word) ? 'correct' : 'wrong';
+            if (normalize(user) === normalize(ins.word)) {
+                newCorrect.add(ins.instanceId);
+            }
+            next[ins.instanceId] = newCorrect.has(ins.instanceId) ? 'correct' : 'wrong';
         });
+
+        setCumulativeCorrect(newCorrect);
         setGraded(next);
-        setStep('1-3');
+        setStep(`${round}-3` as Step);
     };
 
     /** 왼쪽 설명 카드(상/하 색 분리) */
     const HelpChip = () => {
-        if (step === '1-2') {
+        if (subStep === 2) {
             return (
                 <>
                     <View style={styles.helpBox}>
@@ -198,9 +226,9 @@ export default function ScaffoldingScreen({
             );
         }
 
-        const titleText = step === '1-1' ? '단어 터치하기' : '결과 확인';
-        const descTop = step === '1-1' ? '단어를 터치하면' : '단어를 터치하면';
-        const descBottom = step === '1-1' ? '의미를 확인할 수 있어요!' : '의미를 다시 확인할 수 있어요.';
+        const titleText = subStep === 1 ? '단어 터치하기' : '결과 확인';
+        const descTop = subStep === 1 ? '단어를 터치하면' : '단어를 터치하면';
+        const descBottom = subStep === 1 ? '의미를 확인할 수 있어요!' : '의미를 다시 확인할 수 있어요.';
 
         return (
             <View style={styles.helpBox}>
@@ -251,7 +279,7 @@ export default function ScaffoldingScreen({
                 <View style={styles.leftCard}>
                     <HelpChip />
 
-                    {step === '1-1' && (
+                    {subStep === 1 && (
                         <View style={styles.buttonGroup}>
                             <Pressable style={styles.imgBtnWrap} onPress={onReselectWords}>
                                 <Image
@@ -270,7 +298,7 @@ export default function ScaffoldingScreen({
                         </View>
                     )}
 
-                    {step === '1-2' && (
+                    {subStep === 2 && (
                         <View style={styles.buttonGroup}>
                             <Pressable style={styles.imgBtnWrap} onPress={onGrade}>
                                 <Image
@@ -282,26 +310,41 @@ export default function ScaffoldingScreen({
                         </View>
                     )}
 
-                    {step === '1-3' && (
+                    {subStep === 3 && round < 3 && (
+                        <Pressable
+                            style={styles.primaryRectBtn}
+                            onPress={() => {
+                                setStep(`${round + 1}-1` as Step);
+                            }}
+                        >
+                            <Text style={styles.primaryRectBtnText}>Round {round + 1}</Text>
+                        </Pressable>
+                    )}
+
+                    {step === '3-3' && (
                         <Pressable
                             style={styles.primaryRectBtn}
                             onPress={async () => {
                                 if (onSave) {
                                     try {
-                                        const answerList = keywordInstances.map((ins) =>
+                                        const answerList = keywordInstances.slice(0, 20).map((ins) =>
                                             answers[ins.instanceId] ?? ''
                                         );
                                         await onSave(answerList);
-                                        Alert.alert('저장 완료', '학습 데이터가 저장되었습니다.');
+                                        Alert.alert('학습 완료!', '축하합니다! 리워드를 획득했습니다.', [
+                                            { text: '확인', onPress: onBack }
+                                        ]);
                                     } catch (e: any) {
                                         Alert.alert('저장 실패', e?.message ?? '알 수 없는 오류가 발생했습니다.');
                                     }
                                 } else {
-                                    Alert.alert('Round 2', '2단계는 다음 작업에서 연결하겠습니다.');
+                                    Alert.alert('학습 완료!', '축하합니다!', [
+                                        { text: '확인', onPress: onBack }
+                                    ]);
                                 }
                             }}
                         >
-                            <Text style={styles.primaryRectBtnText}>Round 2</Text>
+                            <Text style={styles.primaryRectBtnText}>학습 완료</Text>
                         </Pressable>
                     )}
                 </View>
@@ -320,7 +363,7 @@ export default function ScaffoldingScreen({
                                 const grade = graded[instanceId] ?? 'idle';
                                 const userValue = answers[instanceId] ?? '';
 
-                                if (step === '1-1') {
+                                if (subStep === 1) {
                                     return (
                                         <Pressable
                                             key={idx}
@@ -332,7 +375,7 @@ export default function ScaffoldingScreen({
                                     );
                                 }
 
-                                if (step === '1-2') {
+                                if (subStep === 2) {
                                     const isActive = activeBlankId === instanceId;
                                     return (
                                         <Pressable
